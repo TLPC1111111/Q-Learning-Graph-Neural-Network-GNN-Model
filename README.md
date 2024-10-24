@@ -207,6 +207,91 @@ This project uses the following libraries:
 
 
 
+# AFIT Data Processing and Edge Generation
+
+This repository contains a Python class `AFIT` that processes a custom `.dat` file with satellite visibility information and generates an edge index for graph-based models, such as Graph Neural Networks (GNNs). The code reads satellite support IDs, antenna IDs, visibility windows, task durations, and antenna turnaround times, and constructs an edge list based on the rules defined for compatibility between nodes.
+
+## File Structure
+- `Read_AFIT.py`: Contains the `AFIT` class for reading and processing data.
+- `generate_edges.py`: Uses the `AFIT` class to create edge indices for further use.
+
+## How to Use
+
+### 1. Installation
+Ensure you have the necessary packages installed:
+```bash
+pip install pandas scikit-learn torch
+```
+
+### 2. Prepare Your Data
+Place your `.dat` file in the root directory. The file should follow the structure expected by the `AFIT` class:
+- Column 1: Support ID
+- Column 2: Antenna ID
+- Column 3: Begin window (visibility)
+- Column 4: End window (visibility)
+- Column 5: Task duration
+- Column 6: Antenna turnaround time
+
+### 3. Run the Edge Generation
+
+1. Initialize an `AFIT` object with your data file (e.g., `AFIT("./reqlf13")`).
+2. Use the methods to read the different components of the data:
+    - `read_support_id_list()`
+    - `read_antenna_id_list()`
+    - `read_visbable_window()`
+    - `read_task_duration()`
+    - `read_antenna_turnaround()`
+3. Generate the edge list by comparing the nodes using the provided rules and save it to a file (`SRS_edge.txt`):
+```python
+edge_index = torch.tensor(edge_index)
+edge_index_t = edge_index.t()
+
+with open('SRS_edge.txt', 'w') as wf:
+    for i in range(len(edge_index)):
+        wf.write(f"{edge_index[i][0]} {edge_index[i][1]}
+")
+```
+
+### Example Usage
+```python
+from Read_AFIT import *
+import torch
+
+read_afit = AFIT("./reqlf13")
+
+num_nodes = read_afit.total_length()
+support_id_list = read_afit.read_support_id_list()
+antenna_id_list = read_afit.read_antenna_id_list()
+visbable_window = read_afit.read_visbable_window()
+task_duration = read_afit.read_task_duration()
+antenna_turnaround = read_afit.read_antenna_turnaround()
+
+edge_index = []
+
+for i in range(num_nodes):
+    for j in range(num_nodes):
+        if i == j:
+            continue
+        if support_id_list[i] == support_id_list[j]:
+            edge_index.append([i, j])
+        elif antenna_id_list[i] == antenna_id_list[j] and                 visbable_window[i][1] + antenna_turnaround[i] > visbable_window[j][0] and                 visbable_window[j][1] + antenna_turnaround[j] > visbable_window[i][0]:
+            edge_index.append([i, j])
+
+edge_index = torch.tensor(edge_index)
+edge_index_t = edge_index.t()
+
+with open('SRS_edge.txt', 'w') as wf:
+    for i in range(len(edge_index)):
+        wf.write(f"{edge_index[i][0]} {edge_index[i][1]}
+")
+```
+
+### License
+This project is licensed under the MIT License.
+
+
+
+
 
 
 
