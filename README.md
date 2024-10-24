@@ -36,72 +36,174 @@ To run the model, you will need the following dependencies:
 - **PyTorch Geometric**: Latest version
 - **torch-scatter**, **torch-sparse**, **torch-cluster**, **torch-spline-conv**: Required by PyTorch Geometric.
 
-
 ## Usage
 
-To use the model, you can follow this example:
+### 1. Clone the Repository
+```bash
+git clone https://github.com/TLPC1111111/Q-Learning-Graph-Neural-Network-GNN-Model.git
+cd Q-Learning-Graph-Neural-Network-GNN-Model
+```
+
+### 2. Install Dependencies
+```bash
+pip install torch torch-geometric tensorboard
+```
+
+### 3. Training the Model
+To train the model, simply run:
+
+```bash
+python train.py
+```
+
+This will train the model on the Cora dataset, log the loss values to TensorBoard, and save the best model checkpoint.
+
+### Example Training Script
+
+Here’s an example of the training loop that utilizes Q-learning, experience replay, and GNN:
 
 ```python
 import torch
-from model import Q_learning
+import torch.optim as optim
+from models import Q_learning
+from torch_geometric.datasets import Planetoid
+from torch.utils.tensorboard import SummaryWriter
+import os
+import random
 
-# Example inputs
-w = torch.rand(10)  # node features
-edge_index = torch.tensor([[0, 1, 2], [1, 2, 3]])  # edge index in COO format
-batch = torch.tensor([0, 0, 1, 1])  # batch assignments for graphs
-x_v = torch.rand(4)  # specific node features
+# Initialize TensorBoard writer
+writer_loss = SummaryWriter(log_dir='./Q-Learning/Loss_Curve')
 
-# Initialize and forward pass
-model = Q_learning()
-Q_final_dense, Q_final_mask, adj = model(w, edge_index, batch, x_v)
+# Load the dataset
+path = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
+dataset = Planetoid(path, name='Cora')
 
-print(Q_final_dense, Q_final_mask, adj)
+# Initialize model and optimizer
+model = Q_learning().to(device)
+optimizer = optim.Adam(model.parameters(), lr=1e-5)
+
+# Main training loop
+for epoch in range(50):
+    # Your training logic
+    ...
+    writer_loss.add_scalar('LOSS/Train', loss_mean.item(), flag)
 ```
 
+### 4. Monitoring Training with TensorBoard
+You can visualize the training process using TensorBoard by running the following command:
 
-# Q-Learning Graph Neural Network (GNN) for Maximum Independent Set (MIS)
+```bash
+tensorboard --logdir=./Q-Learning/Loss_Curve
+```
 
-## Overview
+### 5. Saving and Loading Models
+The model checkpoints are saved in the `checkpoints` directory. The best-performing model (based on the size of the MIS) is saved as `zzy_very_handsome.pkl`. You can load this model for inference using:
 
-This repository contains a PyTorch implementation of a Q-Learning Graph Neural Network (GNN) designed to solve the Maximum Independent Set (MIS) problem on graph-structured data. The model uses Graph Isomorphism Networks (GINConv) for learning node embeddings and applies Q-learning to iteratively select nodes, maximizing the independent set.
+```python
+model = Q_learning()
+model.load_state_dict(torch.load('checkpoints/zzy_very_handsome.pkl'))
+```
 
-## Model Architecture
+## Parameters
+- `select_rate`: Random node selection probability (default: 0.003).
+- `gamma`: Discount factor for future rewards in Q-learning (default: 0.8).
+- `batch_size`: Number of samples used for each experience replay batch (default: 64).
+- `experience_buffer_size`: The size of the experience buffer (default: 3000).
+- `iter_times`: Number of iterations for node selection during Q-learning.
 
-### Main Components
+## Results
+The model outputs the Maximum Independent Set (MIS) after training. The best size of the independent set is recorded, and the model is saved when a better MIS is found during training.
 
-1. **Q-Learning GNN**: The core of the model, utilizing multiple GINConv layers and fully connected layers to predict Q-values for each node in the graph.
-2. **Reinforcement Learning**: The model operates in a Q-learning setting, where nodes are selected based on their Q-values. The selected nodes are added to the independent set while their neighbors are rejected, ensuring the independence property.
-3. **Experience Replay**: A replay buffer stores previous transitions, allowing the model to sample from past experiences for better stability during training.
-4. **TensorBoard Logging**: Loss curves during training are logged to TensorBoard.
+## License
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
 
-## Dependencies
+## Acknowledgments
+This project uses the following libraries:
+- PyTorch
+- PyTorch Geometric
+- TensorBoard
 
-- **Python**: 3.6+
-- **PyTorch**: 1.8+
-- **PyTorch Geometric**: Latest version
-- **tensorboard**: For logging training metrics
 
-You can install the necessary dependencies using:
+
+# Q-Learning with Graph Neural Networks (GNN)
+
+This repository contains a Q-learning algorithm implemented using a Graph Neural Network (GNN) for solving the Maximum Independent Set (MIS) problem. The model utilizes Q-learning with experience replay and optimizes through a custom GNN architecture.
+
+## Requirements
+
+Install the required Python libraries with the following command:
 
 ```bash
 pip install torch torch-geometric tensorboard
 ```
 
-## Dataset
-The model uses the Cora dataset, a popular citation network dataset, for training and testing the model. This dataset is included as part of PyTorch Geometric's dataset library.
+## Usage
 
+### 1. Clone the Repository
 
-##  Training Process
-The Q-learning process involves the following steps:
+```bash
+git clone https://github.com/TLPC1111111/Q-Learning-Graph-Neural-Network-GNN-Model.git
+cd Q-Learning-Graph-Neural-Network-GNN-Model
+```
 
-1.**Node Selection**: In each epoch, nodes are selected based on their Q-values, starting from the highest value. Nodes are added to the independent set if they are not adjacent to previously selected nodes.
+### 2. Install Dependencies
 
-2.**Experience Buffer**: The state, action, reward, and next state are stored in an experience buffer. A batch of transitions is sampled from this buffer during training to update the Q-values.
+Install the required dependencies using the command:
 
-3.**Optimization**: The loss is calculated as the squared difference between the predicted Q-value for the current state-action pair and the target value (reward plus discounted future reward). The model is optimized using Adam.
+```bash
+pip install torch torch-geometric tensorboard
+```
 
-4.**Checkpointing**: The model is periodically saved if it finds a better Maximum Independent Set (MIS) during training.
+### 3. Training the Model
 
+To train the model, simply run:
+
+```bash
+python train.py
+```
+
+This will train the model on the Cora dataset, log the loss values to TensorBoard, and save the best model checkpoint.
+
+### 4. Monitoring Training with TensorBoard
+
+You can visualize the training process using TensorBoard by running the following command:
+
+```bash
+tensorboard --logdir=./Q-Learning/Loss_Curve
+```
+
+### 5. Saving and Loading Models
+
+The model checkpoints are saved in the `checkpoints` directory. The best-performing model (based on the size of the MIS) is saved as `zzy_very_handsome.pkl`. You can load this model for inference using:
+
+```python
+model = Q_learning()
+model.load_state_dict(torch.load('checkpoints/zzy_very_handsome.pkl'))
+```
+
+## Parameters
+
+- `select_rate`: Random node selection probability (default: 0.003).
+- `gamma`: Discount factor for future rewards in Q-learning (default: 0.8).
+- `batch_size`: Number of samples used for each experience replay batch (default: 64).
+- `experience_buffer_size`: The size of the experience buffer (default: 3000).
+- `iter_times`: Number of iterations for node selection during Q-learning.
+
+## Results
+
+The model outputs the Maximum Independent Set (MIS) after training. The best size of the independent set is recorded, and the model is saved when a better MIS is found during training.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
+
+## Acknowledgments
+
+This project uses the following libraries:
+
+- PyTorch
+- PyTorch Geometric
+- TensorBoard
 
 
 
